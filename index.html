@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>HD Upscale · cryfsall</title>
+  <link rel="icon" href="https://i.imgur.com/aNEKtoc.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <style>
+    :root {
+      --bg: #c5d0de;
+      --paper: #eef2f7;
+      --ink: #1a2433;
+      --a1: #4d8ef0;
+      --a2: #6ba3ff;
+      --mute: rgba(26,36,51,.65);
+      --line: rgba(26,36,51,.14);
+      --ok: #2a9a56;
+      --bad: #c43d3d;
+      --sh: 0 8px 20px rgba(30,50,80,.16), 0 2px 6px rgba(30,50,80,.08);
+      --sh-sm: 0 3px 0 rgba(30,50,80,.18), 0 4px 12px rgba(30,50,80,.1), inset 0 1px 0 rgba(255,255,255,.7);
+      --inset: inset 2px 2px 6px rgba(0,0,0,.1), inset -1px -1px 0 rgba(255,255,255,.55);
+      --font: 'Nunito', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font: 600 15px/1.55 var(--font);
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 120% 80% at 50% -10%, #e8eef8 0%, transparent 50%),
+        linear-gradient(165deg, #d4deeb 0%, #b8c6d9 45%, #c5d0de 100%);
+      padding-bottom: 110px;
+      -webkit-font-smoothing: antialiased;
+    }
+    body::after {
+      content: "";
+      position: fixed; inset: 0; pointer-events: none; z-index: 9998; opacity: .03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 160px 160px;
+    }
+
+    /* Header */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 18px 16px 8px; max-width: 720px; margin: 0 auto;
+      position: relative; z-index: 20;
+    }
+    .brand {
+      display: inline-flex; align-items: center; gap: 12px;
+      text-decoration: none; color: var(--ink);
+    }
+    .brand-logo {
+      width: 48px; height: 48px; border-radius: 14px; object-fit: cover;
+      background: linear-gradient(180deg, #f5f8fc, #d5dee9);
+      box-shadow: var(--sh-sm); border: 1px solid rgba(255,255,255,.7);
+    }
+    .brand-text { display: flex; flex-direction: column; line-height: 1; gap: 4px; }
+    .brand-text strong {
+      font-weight: 800; font-size: 1.35rem; letter-spacing: -.02em;
+      text-shadow: 0 1px 0 rgba(255,255,255,.8);
+    }
+    .brand-text small {
+      align-self: flex-start; font-size: .6rem; font-weight: 800; letter-spacing: .06em;
+      color: #fff; background: linear-gradient(180deg, #6ba3ff, var(--a1));
+      padding: 3px 8px; border-radius: 8px;
+      box-shadow: 0 2px 0 #1e4a9a, inset 0 1px 0 rgba(255,255,255,.3);
+    }
+    .burger {
+      width: 46px; height: 46px; border: none; border-radius: 14px; cursor: pointer;
+      background: linear-gradient(180deg, #f5f8fc, #d5dee9);
+      box-shadow: var(--sh-sm);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+    }
+    .burger span {
+      display: block; width: 20px; height: 3px; background: var(--ink); border-radius: 2px;
+      transition: transform .25s, opacity .2s;
+    }
+    .burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+    .burger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+    .burger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+    .menu-panel {
+      position: absolute; right: 16px; top: 72px; z-index: 60; min-width: 200px;
+      padding: 12px; border-radius: 16px;
+      background: linear-gradient(180deg, #f7fafc, var(--paper));
+      box-shadow: var(--sh), inset 0 1px 0 #fff; border: 1px solid rgba(255,255,255,.7);
+      opacity: 0; pointer-events: none; transform: translateY(-8px);
+      transition: opacity .15s, transform .2s;
+    }
+    .menu-panel.open { opacity: 1; pointer-events: auto; transform: none; }
+    .menu-panel button, .menu-panel a {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      padding: 11px 12px; border: none; border-radius: 12px; background: transparent;
+      color: var(--ink); font: 700 .9rem var(--font); cursor: pointer; text-decoration: none;
+    }
+    .menu-panel button:hover, .menu-panel a:hover {
+      background: linear-gradient(180deg, #fff, #e4ebf4);
+    }
+
+    main { max-width: 720px; margin: 0 auto; padding: 12px 16px 40px; position: relative; z-index: 1; }
+
+    .hero {
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-weight: 800; font-size: clamp(1.8rem, 6vw, 2.5rem); line-height: 1.1;
+      margin: 0 0 8px; text-shadow: 0 1px 0 rgba(255,255,255,.7);
+    }
+    .hero p { margin: 0; color: var(--mute); font-weight: 700; font-size: .92rem; max-width: 42ch; }
+
+    .page { display: none; }
+    .page.active { display: block; animation: pageIn .28s ease both; }
+    @keyframes pageIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .card {
+      border-radius: 20px; padding: 20px; margin-bottom: 16px;
+      background: linear-gradient(180deg, #f7fafc, var(--paper));
+      box-shadow: var(--sh), inset 0 1px 0 rgba(255,255,255,.9);
+      border: 1px solid rgba(255,255,255,.7);
+    }
+    .card h2 {
+      display: inline-block; margin: 0 0 14px; padding: 6px 14px; border-radius: 12px;
+      font-size: 1rem; font-weight: 800; color: #fff;
+      background: linear-gradient(180deg, #6ba3ff, var(--a1) 50%, #2f6fd4);
+      box-shadow: 0 3px 0 #1e4a9a, 0 4px 12px rgba(77,142,240,.28), inset 0 1px 0 rgba(255,255,255,.35);
+    }
+
+    label { display: block; font-size: .78rem; font-weight: 800; margin: 12px 0 6px; color: var(--mute); letter-spacing: .03em; }
+    input[type=text], input[type=password], input[type=url] {
+      width: 100%; height: 48px; border: none; border-radius: 12px; padding: 0 14px;
+      font: 700 .92rem var(--font); color: var(--ink);
+      background: linear-gradient(180deg, #e4ebf4, #eef3f9);
+      box-shadow: var(--inset), 0 1px 0 rgba(255,255,255,.7); outline: none;
+    }
+    input:focus {
+      background: #fff; box-shadow: var(--inset), 0 0 0 3px rgba(77,142,240,.28);
+    }
+    input::placeholder { color: var(--mute); opacity: .7; }
+
+    .btn {
+      font: inherit; font-weight: 800; border: none; border-radius: 12px;
+      padding: 13px 18px; color: #fff; cursor: pointer;
+      background: linear-gradient(180deg, #6ba3ff, var(--a1) 45%, #2f6fd4);
+      box-shadow: 0 3px 0 #1e4a9a, 0 5px 14px rgba(77,142,240,.28), inset 0 1px 0 rgba(255,255,255,.35);
+      transition: transform .1s, box-shadow .1s, filter .15s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn:hover { filter: brightness(1.04); }
+    .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #1e4a9a, inset 0 2px 5px rgba(0,0,0,.15); }
+    .btn:disabled {
+      background: linear-gradient(180deg, #d0d7e2, #b8c2d0); color: #777;
+      cursor: not-allowed; box-shadow: 0 2px 0 #8a96a8; filter: none;
+    }
+    .btn-ghost {
+      color: var(--ink);
+      background: linear-gradient(180deg, #fff, #e4ebf4);
+      box-shadow: 0 2px 0 #a8b6c8, 0 3px 8px rgba(0,0,0,.08), inset 0 1px 0 #fff;
+    }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .btn-row .btn { flex: 1; min-width: 120px; }
+
+    .drop {
+      border: 2px dashed rgba(77,142,240,.35); border-radius: 16px; padding: 28px 16px;
+      text-align: center; cursor: pointer; transition: background .2s, border-color .2s;
+      background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(230,238,248,.4));
+    }
+    .drop:hover, .drop.drag {
+      border-color: var(--a1); background: rgba(77,142,240,.08);
+    }
+    .drop i { font-size: 2rem; color: var(--a1); margin-bottom: 8px; display: block; }
+    .drop strong { display: block; font-weight: 800; font-size: 1.05rem; }
+    .drop span { color: var(--mute); font-size: .85rem; font-weight: 600; }
+    .preview {
+      margin-top: 14px; border-radius: 14px; overflow: hidden;
+      background: #0a0e16; display: none; position: relative;
+    }
+    .preview.show { display: block; }
+    .preview img { width: 100%; display: block; max-height: 360px; object-fit: contain; }
+    .preview .actions {
+      display: flex; gap: 8px; padding: 10px; background: rgba(0,0,0,.45);
+      backdrop-filter: blur(8px);
+    }
+    .preview .actions a, .preview .actions button {
+      flex: 1; text-align: center; padding: 10px; border-radius: 10px;
+      font-weight: 800; font-size: .85rem; text-decoration: none; border: none; cursor: pointer;
+    }
+    .preview .actions a {
+      background: linear-gradient(180deg, #6ba3ff, var(--a1)); color: #fff;
+    }
+    .preview .actions button {
+      background: rgba(255,255,255,.15); color: #fff;
+    }
+
+    .status {
+      margin-top: 12px; padding: 12px 14px; border-radius: 12px;
+      font-weight: 700; font-size: .88rem; display: none;
+    }
+    .status.show { display: flex; align-items: center; gap: 10px; }
+    .status.info { background: rgba(77,142,240,.12); color: #1e4a9a; }
+    .status.ok { background: rgba(42,154,86,.12); color: var(--ok); }
+    .status.bad { background: rgba(196,61,61,.12); color: var(--bad); }
+    .spinner {
+      width: 18px; height: 18px; border: 2.5px solid rgba(77,142,240,.2);
+      border-top-color: var(--a1); border-radius: 50%;
+      animation: spin .7s linear infinite; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* History grid */
+    .hist-empty {
+      text-align: center; padding: 36px 16px; color: var(--mute); font-weight: 700;
+    }
+    .hist-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;
+    }
+    .hist-item {
+      border-radius: 14px; overflow: hidden;
+      background: linear-gradient(180deg, #f7fafc, var(--paper));
+      box-shadow: var(--sh-sm); border: 1px solid rgba(255,255,255,.7);
+      position: relative;
+    }
+    .hist-item img {
+      width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #d0d8e4;
+    }
+    .hist-item .meta {
+      padding: 8px 10px; font-size: .72rem; font-weight: 700; color: var(--mute);
+      display: flex; justify-content: space-between; align-items: center; gap: 6px;
+    }
+    .hist-item .del {
+      border: none; background: transparent; color: var(--bad); cursor: pointer;
+      font-size: .85rem; padding: 2px;
+    }
+
+    /* Developed */
+    .dev-card {
+      text-align: center; padding: 28px 20px;
+    }
+    .dev-card img {
+      width: 96px; height: 96px; border-radius: 50%; object-fit: cover;
+      border: 4px solid #fff;
+      box-shadow: 0 8px 24px rgba(30,50,80,.2), 0 2px 0 rgba(255,255,255,.8);
+    }
+    .dev-card .name {
+      margin-top: 16px; font-weight: 800; font-size: 1.25rem; letter-spacing: .02em;
+    }
+    .dev-card .label {
+      margin-top: 4px; font-size: .82rem; color: var(--mute); font-weight: 700;
+    }
+    .dev-card .bio {
+      margin: 16px auto 0; max-width: 36ch; font-size: .9rem; color: var(--mute); font-weight: 600;
+    }
+
+    /* Floating glass navbar */
+    .rd-nav {
+      position: fixed; z-index: 1000;
+      left: 50%; bottom: max(16px, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      width: min(360px, calc(100% - 28px));
+      min-height: 64px; padding: 8px 12px;
+      display: flex; align-items: center; justify-content: space-around; gap: 2px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.28));
+      backdrop-filter: blur(20px) saturate(1.6);
+      -webkit-backdrop-filter: blur(20px) saturate(1.6);
+      border: 1px solid rgba(255,255,255,.7);
+      box-shadow:
+        0 12px 32px rgba(40,70,110,.2),
+        0 4px 12px rgba(40,70,110,.1),
+        inset 0 1px 0 rgba(255,255,255,.85),
+        inset 0 -1px 0 rgba(255,255,255,.3);
+    }
+    .rd-nav button {
+      flex: 1; min-width: 0; padding: 10px 8px; border: 0; border-radius: 18px;
+      background: transparent; color: #5a7190;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      font: 800 .68rem var(--font); letter-spacing: .02em; cursor: pointer;
+      transition: color .22s, background .22s, transform .18s, box-shadow .22s;
+    }
+    .rd-nav button i { font-size: 1.2rem; line-height: 1; }
+    .rd-nav button.active {
+      color: #1e4a9a;
+      background: rgba(255,255,255,.72);
+      box-shadow: 0 2px 10px rgba(77,142,240,.18), inset 0 1px 0 rgba(255,255,255,.9);
+    }
+    .rd-nav button.active i {
+      transform: translateY(-1px) scale(1.08);
+      filter: drop-shadow(0 2px 6px rgba(77,142,240,.35));
+    }
+    .rd-nav button:active { transform: scale(.94); }
+
+    .toast-wrap {
+      position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%);
+      z-index: 1100; display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    }
+    .toast {
+      padding: 12px 16px; border-radius: 14px; font-weight: 700; font-size: .88rem;
+      background: linear-gradient(180deg, #f7fafc, var(--paper));
+      box-shadow: var(--sh); border: 1px solid rgba(255,255,255,.8);
+      display: flex; align-items: center; gap: 8px;
+      animation: toastIn .25s ease both;
+    }
+    .toast.ok i { color: var(--ok); }
+    .toast.bad i { color: var(--bad); }
+    .toast.info i { color: var(--a1); }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .key-row {
+      display: flex; gap: 8px; align-items: center;
+    }
+    .key-row input { flex: 1; }
+    .key-row .btn { flex: none; padding: 12px 14px; }
+
+    @media (max-width: 480px) {
+      .topbar { padding: 14px 12px 6px; }
+      main { padding: 8px 12px 36px; }
+      .card { padding: 16px; }
+      .rd-nav { width: calc(100% - 20px); min-height: 60px; padding: 6px 8px; }
+      .rd-nav button { font-size: .62rem; padding: 8px 4px; }
+      .rd-nav button i { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#" id="brandHome">
+      <img class="brand-logo" src="https://i.imgur.com/aNEKtoc.png" alt="cryfsall" width="48" height="48" />
+      <span class="brand-text">
+        <strong>HD Upscale</strong>
+        <small>1080P AI</small>
+      </span>
+    </a>
+    <div style="position:relative">
+      <button type="button" class="burger" id="burger" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="menu-panel" id="menuPanel">
+        <button type="button" data-goto="page-hd"><i class="fa-solid fa-wand-magic-sparkles"></i> HD Upscale</button>
+        <button type="button" data-goto="page-history"><i class="fa-solid fa-clock-rotate-left"></i> History</button>
+        <button type="button" data-goto="page-dev"><i class="fa-solid fa-user"></i> Developed</button>
+              </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HD PAGE -->
+    <section class="page active" id="page-hd">
+      <div class="hero">
+        <h1>Upscale ke 1080p</h1>
+        <p>Masukkan URL gambar / video, atau pilih dari galeri. Hasil AI Super-Resolution via Wink.</p>
+      </div>
+
+      <div class="card">
+        <h2>Upload / URL</h2>
+
+        <label for="imgUrl">URL gambar atau video</label>
+        <input type="url" id="imgUrl" placeholder="https://example.com/image.jpg" />
+
+        <div style="margin:14px 0 8px;text-align:center;color:var(--mute);font-weight:700;font-size:.8rem">— atau —</div>
+
+        <div class="drop" id="dropZone">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <strong>Pilih dari galeri</strong>
+          <span>Tap / drag &amp; drop gambar di sini</span>
+          <input type="file" id="fileInput" accept="image/*" hidden />
+        </div>
+
+        <div class="btn-row">
+          <button type="button" class="btn" id="btnUpscale" style="flex:2">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Upscale 1080p
+          </button>
+          <button type="button" class="btn btn-ghost" id="btnClear">
+            <i class="fa-solid fa-xmark"></i> Clear
+          </button>
+        </div>
+
+        <div class="status" id="statusBox"></div>
+        <div class="preview" id="resultPreview">
+          <img id="resultImg" alt="Hasil upscale" />
+          <div class="actions">
+            <a id="dlLink" href="#" download="hd-upscale.png" target="_blank" rel="noopener">
+              <i class="fa-solid fa-download"></i> Download
+            </a>
+            <button type="button" id="btnOpen"><i class="fa-solid fa-up-right-from-square"></i> Buka</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="page" id="page-history">
+      <div class="hero">
+        <h1>History</h1>
+        <p>Gambar yang pernah di-upscale di perangkat ini.</p>
+      </div>
+      <div class="card">
+        <div class="btn-row" style="margin-top:0;margin-bottom:12px">
+          <button type="button" class="btn btn-ghost" id="btnClearHist" style="flex:none">
+            <i class="fa-solid fa-trash"></i> Hapus semua
+          </button>
+        </div>
+        <div id="histList"></div>
+      </div>
+    </section>
+
+    <!-- DEVELOPED -->
+    <section class="page" id="page-dev">
+      <div class="hero">
+        <h1>Developed</h1>
+        <p>Dibuat dengan tema skeuomorphism.</p>
+      </div>
+      <div class="card dev-card">
+        <img src="https://i.imgur.com/aNEKtoc.png" alt="cryfsall" width="96" height="96" />
+        <div class="name">Developed: cryfsall</div>
+        <div class="label">HD Upscale · Wink AI · 1080p</div>
+        <p class="bio">Website upscale gambar ke 1080p menggunakan API Wink Super-Resolution. Powered by jaky.dev.</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="rd-nav" id="rdNav" aria-label="Navigasi">
+    <button type="button" class="active" data-page="page-hd">
+      <i class="fa-solid fa-wand-magic-sparkles"></i><span>HD</span>
+    </button>
+    <button type="button" data-page="page-history">
+      <i class="fa-solid fa-clock-rotate-left"></i><span>History</span>
+    </button>
+    <button type="button" data-page="page-dev">
+      <i class="fa-solid fa-user"></i><span>Developed</span>
+    </button>
+  </nav>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const API = '/api/upscale'; // Vercel serverless proxy (key di env JAKY_API_KEY)
+    const HIST_KEY = 'hd_upscale_history_v1';
+
+    function toast(msg, type = 'info') {
+      const el = document.createElement('div');
+      el.className = 'toast ' + type;
+      const icon = type === 'ok' ? 'fa-circle-check' : type === 'bad' ? 'fa-circle-xmark' : 'fa-circle-info';
+      el.innerHTML = `<i class="fa-solid ${icon}"></i><span>${msg}</span>`;
+      $('toastWrap').appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 250); }, 2800);
+    }
+
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const page = $(id);
+      if (page) page.classList.add('active');
+      document.querySelectorAll('#rdNav button').forEach(b => {
+        b.classList.toggle('active', b.dataset.page === id);
+      });
+      if (id === 'page-history') renderHistory();
+      $('menuPanel').classList.remove('open');
+      $('burger').setAttribute('aria-expanded', 'false');
+    }
+
+    document.querySelectorAll('#rdNav button').forEach(btn => {
+      btn.addEventListener('click', () => showPage(btn.dataset.page));
+    });
+    document.querySelectorAll('[data-goto]').forEach(btn => {
+      btn.addEventListener('click', () => showPage(btn.dataset.goto));
+    });
+    $('brandHome').addEventListener('click', (e) => { e.preventDefault(); showPage('page-hd'); });
+
+    const burger = $('burger');
+    const menu = $('menuPanel');
+    burger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = !menu.classList.contains('open');
+      menu.classList.toggle('open', open);
+      burger.setAttribute('aria-expanded', open);
+    });
+    document.addEventListener('click', (e) => {
+      if (!menu.contains(e.target) && e.target !== burger) {
+        menu.classList.remove('open');
+        burger.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    function getHistory() {
+      try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); }
+      catch { return []; }
+    }
+    function saveHistory(arr) {
+      localStorage.setItem(HIST_KEY, JSON.stringify(arr.slice(0, 40)));
+    }
+    function addHistory(item) {
+      const arr = getHistory();
+      arr.unshift(item);
+      saveHistory(arr);
+    }
+    function renderHistory() {
+      const list = $('histList');
+      const arr = getHistory();
+      if (!arr.length) {
+        list.innerHTML = '<div class="hist-empty"><i class="fa-solid fa-image" style="font-size:2rem;opacity:.4;display:block;margin-bottom:8px"></i>Belum ada history</div>';
+        return;
+      }
+      list.innerHTML = '<div class="hist-grid">' + arr.map((it, i) => `
+        <div class="hist-item">
+          <a href="${it.url}" target="_blank" rel="noopener"><img src="${it.url}" alt="upscale" loading="lazy" onerror="this.style.opacity=.3" /></a>
+          <div class="meta">
+            <span>${it.date || ''}</span>
+            <button type="button" class="del" data-i="${i}" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('') + '</div>';
+      list.querySelectorAll('.del').forEach(b => {
+        b.addEventListener('click', () => {
+          const arr = getHistory();
+          arr.splice(+b.dataset.i, 1);
+          saveHistory(arr);
+          renderHistory();
+          toast('Dihapus dari history', 'info');
+        });
+      });
+    }
+    $('btnClearHist').addEventListener('click', () => {
+      if (!confirm('Hapus semua history?')) return;
+      localStorage.removeItem(HIST_KEY);
+      renderHistory();
+      toast('History dikosongkan', 'ok');
+    });
+
+    let pendingFile = null;
+    const drop = $('dropZone');
+    const fileInput = $('fileInput');
+
+    drop.addEventListener('click', () => fileInput.click());
+    drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('drag'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
+    drop.addEventListener('drop', (e) => {
+      e.preventDefault();
+      drop.classList.remove('drag');
+      const f = e.dataTransfer.files?.[0];
+      if (f) handleFile(f);
+    });
+    fileInput.addEventListener('change', () => {
+      const f = fileInput.files?.[0];
+      if (f) handleFile(f);
+    });
+
+    function handleFile(f) {
+      if (!f.type.startsWith('image/')) {
+        toast('File harus gambar', 'bad');
+        return;
+      }
+      pendingFile = f;
+      $('imgUrl').value = '';
+      drop.querySelector('strong').textContent = f.name;
+      drop.querySelector('span').textContent = (f.size / 1024).toFixed(1) + ' KB · siap di-upscale';
+      toast('Gambar dipilih: ' + f.name, 'info');
+    }
+
+    $('btnClear').addEventListener('click', () => {
+      pendingFile = null;
+      fileInput.value = '';
+      $('imgUrl').value = '';
+      drop.querySelector('strong').textContent = 'Pilih dari galeri';
+      drop.querySelector('span').textContent = 'Tap / drag & drop gambar di sini';
+      $('resultPreview').classList.remove('show');
+      setStatus('', '');
+    });
+
+    function setStatus(type, html) {
+      const box = $('statusBox');
+      if (!type) { box.className = 'status'; box.innerHTML = ''; return; }
+      box.className = 'status show ' + type;
+      box.innerHTML = html;
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Gagal baca file'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function uploadToTmp(file) {
+      const dataUrl = await fileToBase64(file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name || 'image.jpg',
+          mime: file.type || 'image/jpeg',
+          data: dataUrl
+        })
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json.status === false || !json.url) {
+        throw new Error(json.msg || ('Upload gagal HTTP ' + res.status));
+      }
+      return json.url;
+    }
+
+    function extractResultUrl(data) {
+      if (!data) return null;
+      if (typeof data === 'string') {
+        const m = data.match(/https?:\/\/[^\s"'<>]+/);
+        return m ? m[0] : (data.startsWith('http') ? data : null);
+      }
+      // common keys first
+      const direct = data.url || data.result || data.image || data.output ||
+        data.media || data.link || data.file || data.src ||
+        data.data?.url || data.data?.result || data.data?.image ||
+        data.data?.output || data.data?.media || data.data?.link ||
+        data.result?.url || data.output?.url || null;
+      if (typeof direct === 'string' && direct.startsWith('http')) return direct;
+
+      // deep scan: find first http(s) string in object
+      const found = [];
+      (function walk(o, depth) {
+        if (depth > 6 || o == null) return;
+        if (typeof o === 'string') {
+          if (/^https?:\/\//i.test(o) && /\.(png|jpe?g|webp|gif|bmp|mp4|webm)(\?|$)/i.test(o) ||
+              /^https?:\/\//i.test(o) && /image|upscale|cdn|media|result|wink|jaky/i.test(o)) {
+            found.push(o);
+          }
+          return;
+        }
+        if (Array.isArray(o)) { o.forEach(v => walk(v, depth + 1)); return; }
+        if (typeof o === 'object') {
+          for (const k of Object.keys(o)) walk(o[k], depth + 1);
+        }
+      })(data, 0);
+
+      // prefer image-like extensions
+      const img = found.find(u => /\.(png|jpe?g|webp|gif)(\?|$)/i.test(u));
+      return img || found[0] || null;
+    }
+
+    async function doUpscale() {
+      let sourceUrl = $('imgUrl').value.trim();
+      const btn = $('btnUpscale');
+      btn.disabled = true;
+      $('resultPreview').classList.remove('show');
+
+      try {
+        if (pendingFile && !sourceUrl) {
+          setStatus('info', '<span class="spinner"></span> Mengunggah gambar sementara…');
+          sourceUrl = await uploadToTmp(pendingFile);
+        }
+        if (!sourceUrl) {
+          toast('Isi URL atau pilih gambar', 'bad');
+          btn.disabled = false;
+          setStatus('', '');
+          return;
+        }
+
+        setStatus('info', '<span class="spinner"></span> Sedang upscale ke 1080p…');
+
+        // Panggil proxy Vercel (API key ada di server env)
+        const qs = new URLSearchParams({ url: sourceUrl });
+        const res = await fetch(`${API}?${qs.toString()}`, { method: 'GET' });
+        const json = await res.json().catch(() => ({}));
+        console.log('Upscale API response:', json);
+
+        if (!res.ok || json.status === false) {
+          const msg = json.msg || json.message || json.error || ('HTTP ' + res.status);
+          throw new Error(msg);
+        }
+
+        const outUrl = extractResultUrl(json) || extractResultUrl(json.data);
+        if (!outUrl) {
+          console.log('API response (no url found):', JSON.stringify(json, null, 2));
+          throw new Error('Tidak menemukan URL hasil. Buka console (F12) untuk lihat response API.');
+        }
+
+        setStatus('ok', '<i class="fa-solid fa-circle-check"></i> Upscale berhasil!');
+        const img = $('resultImg');
+        img.onerror = () => {
+          img.style.display = 'none';
+          let tip = $('resultTip');
+          if (!tip) {
+            tip = document.createElement('div');
+            tip.id = 'resultTip';
+            tip.style.cssText = 'padding:14px;color:#fff;font-size:.85rem;font-weight:700;word-break:break-all';
+            img.parentNode.insertBefore(tip, img.nextSibling);
+          }
+          tip.innerHTML = 'Preview gagal dimuat (hotlink/CORS). Pakai tombol Download / Buka.<br><a href="'+outUrl+'" target="_blank" rel="noopener" style="color:#8ec5ff">'+outUrl+'</a>';
+        };
+        img.onload = () => { img.style.display = 'block'; const t=$('resultTip'); if(t) t.remove(); };
+        img.style.display = 'block';
+        img.src = outUrl;
+        $('dlLink').href = outUrl;
+        $('dlLink').setAttribute('download', 'hd-upscale.png');
+        $('resultPreview').classList.add('show');
+        $('btnOpen').onclick = () => window.open(outUrl, '_blank');
+        console.log('Upscale result URL:', outUrl);
+        console.log('Full API response logged above if needed');
+
+        addHistory({
+          url: outUrl,
+          src: sourceUrl,
+          date: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+        });
+        toast('Berhasil di-upscale!', 'ok');
+      } catch (err) {
+        console.error(err);
+        setStatus('bad', '<i class="fa-solid fa-circle-xmark"></i> ' + (err.message || 'Gagal upscale'));
+        toast(err.message || 'Gagal', 'bad');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    $('btnUpscale').addEventListener('click', doUpscale);
+    $('imgUrl').addEventListener('keydown', (e) => { if (e.key === 'Enter') doUpscale(); });
+  </script>
+</body>
+</html>
